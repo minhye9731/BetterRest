@@ -25,6 +25,30 @@ struct ContentView: View {
         return Calendar.current.date(from: components) ?? Date.now
     }
     
+    var recBedTime: String { // challenge3
+        
+        var bedTimeValue: String
+
+        let components = Calendar.current.dateComponents([.hour, .minute], from: wakeUp)
+        let hour = (components.hour ?? 0) * 60 * 60
+        let minute = (components.minute ?? 0) * 60
+        
+        do {
+            let config = MLModelConfiguration()
+            let model = try SleepCalculator(configuration: config)
+            
+            let prediction = try model.prediction(wake: Double(hour + minute), estimatedSleep: sleepAmount, coffee: Double(coffeeAmount))
+
+            let sleepTime = wakeUp - prediction.actualSleep
+            
+            bedTimeValue = sleepTime.formatted(date: .omitted, time: .shortened)
+        } catch {
+            bedTimeValue = "Sorry, there was a problem calculating your bedtime."
+        }
+        
+        return bedTimeValue
+    }
+    
     var body: some View {
         
         NavigationView {
@@ -45,26 +69,35 @@ struct ContentView: View {
                 }
                 
                 Section {
-                    
+
                     Picker("Number of cups", selection: $coffeeAmount) {
                         ForEach(1..<21) {
                             Text($0 == 1 ? "1 cup" : "\($0) cups")
                         }
+                        
                     }
                     .pickerStyle(.menu)
                 } header: {
                     Text("Daily coffee intake")
                 }
+                
+                Section {
+                    Text(recBedTime)
+                } header: {
+                    Text("Your ideal bedtime is...")
+                }
+
+
             }
             .navigationTitle("BetterRest")
-            .toolbar {
-                Button("Calculate", action: calculateBedtime)
-            }
-            .alert(alertTitle, isPresented: $showingAlert) {
-                Button("OK") { }
-            } message: {
-                Text(alertMessage)
-            }
+//            .toolbar {
+//                Button("Calculate", action: calculateBedtime)
+//            }
+//            .alert(alertTitle, isPresented: $showingAlert) {
+//                Button("OK") { }
+//            } message: {
+//                Text(alertMessage)
+//            }
         }
 
     }
@@ -93,17 +126,7 @@ struct ContentView: View {
         }
         showingAlert = true
     }
-    
-    func date() {
-//        var components = DateComponents()
-//        components.hour = 8
-//        components.minute = 0
-//        let date = Calendar.current.date(from: components) ?? Date.now
-        
-        let components = Calendar.current.dateComponents([.hour, .minute], from: .now)
-        let hour = components.hour ?? 0
-        let minute = components.minute ?? 0
-    }
+  
 }
 
 struct ContentView_Previews: PreviewProvider {
