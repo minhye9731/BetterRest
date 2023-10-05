@@ -44,7 +44,15 @@ struct ContentView: View {
                     Text("Desired amount of sleep")
                 }
                 
-                VStack(alignment: .leading, spacing: 0) {
+                Section {
+                    
+                    Picker("Number of cups", selection: $coffeeAmount) {
+                        ForEach(1..<21) {
+                            Text($0 == 1 ? "1 cup" : "\($0) cups")
+                        }
+                    }
+                    .pickerStyle(.menu)
+                } header: {
                     Text("Daily coffee intake")
                 }
             }
